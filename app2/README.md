@@ -1,64 +1,61 @@
 # 子应用2 - 用户与角色管理
 
-基于 Vite + React 构建的 MicroApp 微前端子应用，提供用户管理和角色管理页面。表格和分页组件统一复用 `shared` 远程模块，数据存储依赖 `mockDB` 提供的 IndexedDB 本地数据库。
+基于 **Module Federation + React + Vite** 构建的微前端子应用，提供用户管理和角色管理功能。该应用通过 Module Federation 消费主应用（host）暴露的公共 UI 组件（表格、分页），同时将自身页面组件（用户列表、角色列表）暴露给主应用动态加载。
 
 ## 项目简介
 
-该应用是 [Vite Microapp React Example](https://github.com/liuzane/mf-react-vite-example.git) 的微前端子应用之一，独立开发、部署，并通过 MicroApp 框架被主应用加载。主要业务功能：
+本项目是 [Module Federation React Vite 示例](https://github.com/liuzane/mf-react-vite-example) 的子应用之一，独立开发、独立部署。主要业务功能：
 
-- 用户列表：展示系统用户数据，支持分页浏览
-- 角色列表：展示角色数据，支持分页浏览
+- **用户列表**：展示系统用户数据，支持分页浏览
+- **角色列表**：展示角色数据，支持分页浏览
 
-所有表格展示及分页操作均使用 `shared` 远程模块中的通用组件，数据来源于 `mockDB` 模块封装的 IndexedDB 服务，实现前端本地数据持久化。
+表格展示和分页操作均复用 **host** 提供的通用组件，数据来源于 host 暴露的 **mockDB**（基于 IndexedDB 的本地数据库服务），实现前端数据持久化。
 
 ## 技术栈
 
-| 技术                | 说明                                                                 |
-| ------------------- | -------------------------------------------------------------------- |
-| Vite                | 构建工具，提供极速的开发服务器与打包能力                               |
-| React 19            | UI 框架                                                             |
-| React Router DOM v6 | 内部路由（用户 / 角色页面切换）                                       |
-| Ant Design 6        | 组件库，提供一致的 UI 组件集                                         |
-| MicroApp           | 微前端框架，该应用作为子应用接入                                       |
-| Module Federation   | 用于加载 `shared` 远程模块（表格、分页组件、IndexedDB 工具）           |
-| Mock Database       | 浏览器本地数据库，由 `mockDB` 模块统一管理与访问                       |
+| 技术 | 说明 |
+|------|------|
+| Vite | 构建工具，提供快速的开发体验 |
+| React 19 | UI 框架 |
+| React Router DOM v6 | 内部路由（用户/角色页面切换，仅独立开发时使用） |
+| Ant Design 6 | 组件库（可选） |
+| Module Federation（`@module-federation/vite`） | 模块联邦，用于暴露页面组件并消费 host 的公共资源 |
 
 ## 前置条件
 
 - Node.js >= 22
 - npm / yarn / pnpm 均可
-- 了解 MicroApp 基本概念
-- `shared` 远程模块需要提前启动（开发时建议同时启动 `shared` 服务）
+- 了解 Module Federation 基本概念
+- **host 主应用需要提前启动**，因为 app2 需要消费 host 暴露的公共组件和 mockDB
 
-> 若 `shared` 模块独立运行，请参照其 README 启动开发服务器，确保 `shared` 的 Module Federation 入口可访问（默认地址 `http://localhost:3999`）。
+> 开发时建议先启动 host，再启动 app2；或者同时启动，但确保 host 的 remoteEntry 可访问（默认地址 `http://localhost:3000/assets/remoteEntry.js`）。
 
 ## 安装与运行
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/liuzane/mf-react-vite-example.git
+# 1. 进入 app2 目录
 cd app2
 
 # 2. 安装依赖
 npm install
 
-# 3. 开发模式启动（需要确保 shared 模块已启动）
+# 3. 启动开发服务器（需确保 host 已启动）
 npm run dev
 
 # 4. 生产构建
 npm run build
 ```
 
-应用默认运行在 `http://localhost:3002`（Vite 默认端口可能被占用，具体以终端输出为准）。
+应用默认运行在 `http://localhost:3002`（具体端口以终端输出为准）。
 
-### 与主应用联调
+### 联调所需服务清单
 
-1. 启动 `shared` 远程模块服务（提供组件与 IndexedDB API）
-2. 启动本子应用
-3. 启动主应用，在其配置中加载本子应用的开发入口：`http://localhost:3002/`  
-   主应用通过 `<MicroApp name="sub-app2" url="http://localhost:3002/"></MicroApp>` 方式引用。
+| 服务名称 | 默认地址 | 说明 |
+|----------|----------|------|
+| **host** | http://localhost:3000 | 主应用，暴露公共组件和 mockDB |
+| **app2** | http://localhost:3002 | 本子应用，提供用户/角色页面 |
 
-> 独立访问子应用（不通过主应用）时，请确保 `shared` 模块已被正确加载（通过 Module Federation 的 remote 配置），否则表格和分页组件无法显示。
+**启动顺序建议**：先启动 host，再启动 app2（确保 host 的公共资源可用）。
 
 ## 问题与解决
 
@@ -71,4 +68,8 @@ npm run build
 修改 `host/package.json` 和 `app2/package.json` 的打包命令，将 `"build": "npm run tsc && vite build"` 改为 `"build": "vite build"`。
 然后打一次包，再启动开发环境。
 
-> 原因：这是因为 host 的模块联邦和 app2 的模块联邦配置相互引用，导致在第一次启动时，无法正确创建和下载模块类型定义，因此需要先打包一次让模块类型定义生成。去掉 `npm run tsc` 是因为本地没有 @mf-types 的类型，打包不会通过。
+
+## 许可证
+
+MIT License  
+Copyright (c) 2026-present, liuzane

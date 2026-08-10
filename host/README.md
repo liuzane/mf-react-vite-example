@@ -1,68 +1,64 @@
-# 主应用 - Micro App Host
+# Host 主应用
 
-基于 MicroApp + React + Vite 构建的微前端主应用（基座应用），负责整体布局、菜单导航以及子应用的动态加载。菜单组件通过 Module Federation 从 `shared` 远程模块获取，实现菜单配置的统一管理。
+基于 **Module Federation + React + Vite** 构建的微前端主应用（基座），负责全局布局、路由控制、全局状态管理，并提供公共组件供子应用使用。它通过 Module Federation 动态加载子应用（app1、app2）暴露的页面组件，实现微前端架构。
 
 ## 项目简介
 
-本项目是 [Vite Microapp React Example](https://github.com/liuzane/mf-react-vite-example) 的主应用，采用 MicroApp 框架聚合多个独立子应用（如订单管理、用户管理等）。主要职责：
+本项目是 [Module Federation React Vite 示例](https://github.com/liuzane/mf-react-vite-example) 的主应用，主要职责包括：
 
-- 提供全局布局（顶部栏 / 侧边栏 / 内容区域）
-- 从 `shared` 远程模块加载动态菜单组件
-- 管理子应用的注册、切换与生命周期
-- 提供全局样式、错误边界等基础能力
-
-所有菜单项及导航逻辑由 `shared` 模块统一维护，主应用仅负责渲染和路由联动。
+- 提供整体布局（侧边栏菜单、顶部栏、内容区域）
+- 统一路由控制，管理所有页面路径
+- 提供全局状态（如用户信息、主题设置），子应用可通过 props 或 Context 消费
+- 将公共 UI 组件（表格、分页等）和 IndexedDB 数据服务（mockDB）通过 Module Federation 暴露给子应用（app1/app2）
+- 动态加载 app1（订单管理、商品管理）和 app2（用户管理、角色管理）的页面组件
 
 ## 技术栈
 
-| 技术                | 说明                                                                 |
-| ------------------- | -------------------------------------------------------------------- |
-| Vite                | 构建工具，提供极速的开发体验                                          |
-| React 19            | UI 框架                                                             |
-| React Router DOM v6 | 路由管理（主应用的路由与子应用路径映射）                               |
-| Ant Design 6        | 组件库，提供一致的 UI 组件集                                         |
-| MicroApp            | 微前端框架，负责子应用的加载、卸载与通信                               |
-| Module Federation   | 用于加载 `shared` 远程模块（菜单组件、全局配置）                      |
+| 技术 | 说明 |
+|------|------|
+| Vite | 构建工具，提供快速的开发体验 |
+| React 19 | UI 框架 |
+| React Router DOM v6 | 路由管理，统一控制所有页面路径 |
+| Ant Design 6 | UI 组件库（可选，用于界面美化） |
+| Module Federation（`@module-federation/vite`） | 模块联邦，用于暴露公共资源并加载子应用页面 |
+| Redux | 全局状态管理（可根据喜好选择） |
 
 ## 前置条件
 
 - Node.js >= 22
 - npm / yarn / pnpm 均可
-- 已了解 MicroApp 基本概念
-- `shared` 远程模块需要提前启动（提供菜单组件及配置）
-- 子应用1（订单/商品）、子应用2（用户/角色）需能够独立访问
+- 了解 Module Federation 基本概念
+- **子应用 app1 和 app2 需要提前启动**，以便 host 能加载其暴露的页面组件
 
-> 开发时建议同时启动 `shared` 以及所有子应用，以保证完整的联调环境。
+> 开发时建议按顺序启动：先启动 host（暴露公共组件），再启动 app1/app2（以便 host 可以加载它们），或者先启动所有子应用再启动 host 也可以（只要子应用启动时能访问到 host 暴露的 remote 资源即可）。但为保证一致，推荐先启动 host。
 
 ## 安装与运行
 
 ```bash
-# 1. 克隆仓库
-git clone https://github.com/liuzane/mf-react-vite-example.git
+# 1. 进入 host 目录
 cd host
 
 # 2. 安装依赖
 npm install
 
-# 3. 启动开发服务器（需要确保 shared 模块已启动）
+# 3. 启动开发服务器
 npm run dev
-
-# 4. 生产构建
-npm run build
 ```
 
-应用默认运行在 `http://localhost:3000`（Vite 默认端口可能被占用，具体以终端输出为准）。
+应用默认运行在 `http://localhost:3000`（具体端口以终端输出为准）。
 
 ### 联调所需服务清单
 
-| 服务名称          | 默认地址                 | 说明                       |
-| ----------------- | ------------------------ | -------------------------- |
-| shared 模块      | http://localhost:3999    | 提供菜单组件、全局配置      |
-| 子应用1（订单）   | http://localhost:3001    | 订单与商品管理页面         |
-| 子应用2（用户）   | http://localhost:3002    | 用户与角色管理页面         |
-| 主应用           | http://localhost:3000    | 主应用入口，聚合所有子应用   |
+| 服务名称 | 默认地址 | 说明 |
+|----------|----------|------|
+| **host** | http://localhost:3000 | 主应用，提供布局、路由、全局状态及公共组件 |
+| **app1** | http://localhost:3001 | 子应用1，暴露订单/商品页面 |
+| **app2** | http://localhost:3002 | 子应用2，暴露用户/角色页面 |
 
-启动顺序建议：`shared` → 子应用1 / 子应用2 → 主应用。
+**启动顺序建议**：先启动 host，再启动 app1/app2（或者同时启动，只要确保 host 的 remote 地址配置正确）。
+
+> 注意：子应用会通过 Module Federation 消费 host 暴露的公共组件，因此 host 必须先于子应用启动，或者子应用启动时能访问到 host 的 remoteEntry。
+
 
 ## 问题与解决
 
@@ -76,4 +72,8 @@ npm run build
 修改 `host/package.json`、`app1/package.json` 和 `app2/package.json` 的打包命令，将 `"build": "npm run tsc && vite build"` 改为 `"build": "vite build"`。
 然后打一次包，再启动开发环境。
 
-> 原因：这是因为 host 的模块联邦和 app1、app2 的模块联邦配置相互引用，导致在第一次启动时，无法正确创建和下载模块类型定义，因此需要先打包一次让模块类型定义生成。去掉 `npm run tsc` 是因为本地没有 @mf-types 的类型，打包不会通过。
+
+## 许可证
+
+MIT License  
+Copyright (c) 2026-present, liuzane
