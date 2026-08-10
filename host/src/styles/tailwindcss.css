@@ -1,0 +1,5 @@
+/* @layer theme, base, antd, components, utilities; */
+/* 不适用 layer 层 */
+@import "tailwindcss/preflight.css";
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";

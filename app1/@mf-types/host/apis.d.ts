@@ -1,0 +1,3 @@
+
+    export type RemoteKeys = 'host/consts' | 'host/enums' | 'host/store' | 'host/store/slices/dashboardSlice' | 'host/components/SharedPagination' | 'host/components/SharedTable';
+    type PackageType<T> = T extends 'host/components/SharedTable' ? typeof import('host/components/SharedTable') :T extends 'host/components/SharedPagination' ? typeof import('host/components/SharedPagination') :T extends 'host/store/slices/dashboardSlice' ? typeof import('host/store/slices/dashboardSlice') :T extends 'host/store' ? typeof import('host/store') :T extends 'host/enums' ? typeof import('host/enums') :T extends 'host/consts' ? typeof import('host/consts') :any;

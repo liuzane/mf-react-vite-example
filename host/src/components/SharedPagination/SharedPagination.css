@@ -1,0 +1,10 @@
+.shared-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.shared-pagination__left {
+  font-size: 14px;
+}

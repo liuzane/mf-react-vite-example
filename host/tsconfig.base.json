@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+    
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    
+    /* Paths */
+    "paths": {
+      "@/*": ["./src/*"],
+      "mockDB/*": ["./@mf-types/mockDB/*"],
+      "app1/*": ["./@mf-types/app1/*"],
+      "app2/*": ["./@mf-types/app2/*"]
+    }
+  }
+}

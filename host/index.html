@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Module Federation React Vite Example</title>
+    <style>
+      .fullscreen-loading_container {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(255, 255, 255, 0.75);
+        z-index: 10000;
+        transition: opacity .5s ease-in-out;
+      }
+
+      .fullscreen-loading__content {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+
+      .fullscreen-loading__viewbox {
+        width: 16vw;
+        height: 16vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading" class="fullscreen-loading_container">
+      <div class="fullscreen-loading__content">
+        <div class="fullscreen-loading__viewbox">
+          <svg
+            fill="#2d8cf0"
+            width="100%"
+            height="100%"
+            viewBox="0 0 25 30"
+          >
+            <rect
+              width="4"
+              height="11.3922"
+              rx="1.5"
+              ry="1.5"
+              x="0"
+              y="9.80392"
+            >
+              <animate
+                attributeName="height"
+                attributeType="XML"
+                begin="0s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="5;21;5"
+              />
+              <animate
+                attributeName="y"
+                attributeType="XML"
+                begin="0s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="13; 5; 13"
+              />
+            </rect>
+            <rect
+              height="19.3922"
+              rx="1.5"
+              ry="1.5"
+              width="4"
+              x="10"
+              y="5.80392"
+            >
+              <animate
+                attributeName="height"
+                attributeType="XML"
+                begin="0.15s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="5;21;5"
+              />
+              <animate
+                attributeName="y"
+                attributeType="XML"
+                begin="0.15s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="13; 5; 13"
+              />
+            </rect>
+            <rect
+              height="14.6078"
+              rx="1.5"
+              ry="1.5"
+              width="4"
+              x="20"
+              y="8.19608"
+            >
+              <animate
+                attributeName="height"
+                attributeType="XML"
+                begin="0.3s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="5;21;5"
+              />
+              <animate
+                attributeName="y"
+                attributeType="XML"
+                begin="0.3s"
+                dur="0.6s"
+                repeatCount="indefinite"
+                values="13; 5; 13"
+              />
+            </rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

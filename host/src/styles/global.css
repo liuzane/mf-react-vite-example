@@ -1,0 +1,19 @@
+html, body, #root {
+  height: 100%;
+}
+
+.text-primary {
+  color: var(--ant-color-primary);
+}
+
+.text-success {
+  color: var(--ant-color-success);
+}
+
+.text-warning {
+  color: var(--ant-color-warning);
+}
+
+.text-danger {
+  color: var(--ant-color-error);
+}
