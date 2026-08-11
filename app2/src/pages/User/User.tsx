@@ -27,7 +27,7 @@ import { UserStatusEnum } from '@/enums/user.enum';
 
 // 类型
 import type { TableProps } from 'antd';
-import type { UserSearchParams, UserUpdateDTO } from 'mockDB/services/UserService';
+import type { UserSearchParams, UserUpdateDTO } from 'mockDB/services/user-service';
 import type { Role } from 'mockDB/data/roles';
 import type { SharedTable } from 'host/components/SharedTable';
 import type { SharedPagination } from 'host/components/SharedPagination';

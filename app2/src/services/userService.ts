@@ -12,7 +12,7 @@ const [
   import('host/consts'),
   import('mockDB/store-names'),
   import('mockDB/mapper'),
-  import('mockDB/services/UserService'),
+  import('mockDB/services/user-service'),
 ]);
 
 const userMapper: DatabaseMapper<User> = new Mapper<User>(DATABASE_NAME, USER_STORE_NAME);

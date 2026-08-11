@@ -29,7 +29,7 @@ import { RoleStatusEnum } from '@/enums/role.enum';
 import type { TableProps } from 'antd';
 import type { Role } from 'mockDB/data/roles';
 import type { User } from 'mockDB/data/users';
-import type { RoleSearchParams, RoleUpdateDTO } from 'mockDB/services/RoleService';
+import type { RoleSearchParams, RoleUpdateDTO } from 'mockDB/services/role-service';
 import type { SharedTable } from 'host/components/SharedTable';
 import type { SharedPagination } from 'host/components/SharedPagination';
 import type {

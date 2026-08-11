@@ -12,7 +12,7 @@ const [
   import('host/consts'),
   import('mockDB/store-names'),
   import('mockDB/mapper'),
-  import('mockDB/services/OrderService'),
+  import('mockDB/services/order-service'),
 ]);
 
 const orderMapper: DatabaseMapper<Order> = new Mapper<Order>(DATABASE_NAME, ORDER_STORE_NAME);

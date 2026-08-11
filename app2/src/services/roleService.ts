@@ -12,7 +12,7 @@ const [
   import('host/consts'),
   import('mockDB/store-names'),
   import('mockDB/mapper'),
-  import('mockDB/services/RoleService'),
+  import('mockDB/services/role-service'),
 ]);
 
 const roleMapper: DatabaseMapper<Role> = new Mapper<Role>(DATABASE_NAME, ROLE_STORE_NAME);

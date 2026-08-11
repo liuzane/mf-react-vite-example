@@ -31,7 +31,7 @@ import type { NavigateFunction } from 'react-router-dom';
 import type { TableProps } from 'antd';
 import type { Product } from 'mockDB/data/products';
 import type { User } from 'mockDB/data/users';
-import type { OrderSearchParams, OrderUpdateDTO } from 'mockDB/services/OrderService';
+import type { OrderSearchParams, OrderUpdateDTO } from 'mockDB/services/order-service';
 import type { SharedTable } from 'host/components/SharedTable';
 import type { SharedPagination } from 'host/components/SharedPagination';
 import type {

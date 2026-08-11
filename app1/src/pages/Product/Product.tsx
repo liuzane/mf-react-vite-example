@@ -29,7 +29,7 @@ import { ProductStatusEnum, ProductCategoryEnum } from '@/enums/product.enum';
 // 类型
 import type { TableProps } from 'antd';
 import type { RootState, AppDispatch } from 'host/store';
-import type { ProductSearchParams, ProductUpdateDTO } from 'mockDB/services/ProductService';
+import type { ProductSearchParams, ProductUpdateDTO } from 'mockDB/services/product-service';
 import type { SharedTable } from 'host/components/SharedTable';
 import type { SharedPagination } from 'host/components/SharedPagination';
 import type {
