@@ -25,7 +25,7 @@ export default (env: Record<string, string>) => federation(createModuleFederatio
     },
   },
   exposes: {
-    './styles': './src/styles',
+    './styles': './src/styles/index.ts',
     './Order': './src/pages/Order/index.ts',
     './Product': './src/pages/Product/index.ts',
   },

@@ -4,7 +4,7 @@ import globalCss from './global.css?inline';
 let styleElement: HTMLStyleElement | null = null;
 let loadCount: number = 0; // 可选：引用计数，防止多次加载重复插入
 
-export function mount() {
+export function mount(): void {
   if (styleElement) {
     // 如果已经加载，只增加计数，不重复插入
     loadCount++;
@@ -23,7 +23,7 @@ export function mount() {
   loadCount = 1;
 }
 
-export function unmount() {
+export function unmount(): void {
   if (!styleElement) return;
 
   loadCount--;
