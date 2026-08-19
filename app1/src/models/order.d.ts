@@ -1,18 +1,9 @@
 // 类型
 import type { Order } from 'mockDB/data/orders';
-
-// 枚举
-import { OrderStatusEnum } from '@/enums/order.enum';
+import type { OrderStatusType } from 'shared/models';
 
 export interface IOrder extends Omit<Order, 'status'> {
   status: OrderStatusType;
-}
-
-export type OrderStatusType = typeof OrderStatusEnum[keyof typeof OrderStatusEnum];
-
-export interface IStatusConfig {
-  text: string;
-  color: 'warning' | 'processing' | 'success' | 'default' | 'error';
 }
 
 export interface IOrderEditForm {

@@ -22,22 +22,18 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 
-// 枚举
-import { OrderStatusEnum } from '@/enums/order.enum';
-
 // 类型
-import type { RootState, AppDispatch } from 'host/store';
+import type { RootState, AppDispatch } from 'shared/store';
 import type { NavigateFunction } from 'react-router-dom';
 import type { TableProps } from 'antd';
 import type { Product } from 'mockDB/data/products';
 import type { User } from 'mockDB/data/users';
 import type { OrderSearchParams, OrderUpdateDTO } from 'mockDB/services/order-service';
-import type { SharedTable } from 'host/components/SharedTable';
-import type { SharedPagination } from 'host/components/SharedPagination';
+import type { OrderStatusType, OrderStatusMapConfig } from 'shared/models';
+import type { SharedTable } from 'shared/components/SharedTable';
+import type { SharedPagination } from 'shared/components/SharedPagination';
 import type {
   IOrder,
-  OrderStatusType,
-  IStatusConfig,
   IOrderEditForm,
 } from '@/models/order';
 
@@ -48,27 +44,23 @@ import userService from '@/services/userService';
 
 // 模块联邦远程模块
 const [
-  { AppNameEnum }, // 应用名称枚举
+  { ORDER_STATUS_MAP }, // 订单状态映射
+  {
+    AppNameEnum, // 应用名称枚举
+    OrderStatusEnum, // 订单状态枚举
+  },
   { queryOrderStatistics }, // 订单统计查询函数
 ] = await Promise.all([
-  import('host/enums'),
-  import('host/store/slices/dashboardSlice'),
+  import('shared/consts'),
+  import('shared/enums'),
+  import('shared/store/slices/dashboardSlice'),
 ]);
 
 // 模块联邦组件
-const SharedTable: SharedTable = lazy(() => import('host/components/SharedTable')) as SharedTable;
-const SharedPagination: SharedPagination = lazy(() => import('host/components/SharedPagination')) as SharedPagination;
+const SharedTable: SharedTable = lazy(() => import('shared/components/SharedTable')) as SharedTable;
+const SharedPagination: SharedPagination = lazy(() => import('shared/components/SharedPagination')) as SharedPagination;
 
 const { Option } = Select;
-
-// 订单状态映射
-const STATUS_MAP: Record<OrderStatusType, IStatusConfig> = {
-  [OrderStatusEnum.Pending]: { text: '待支付', color: 'warning' },
-  [OrderStatusEnum.Paid]: { text: '已支付', color: 'processing' },
-  [OrderStatusEnum.Shipped]: { text: '已发货', color: 'success' },
-  [OrderStatusEnum.Completed]: { text: '已完成', color: 'default' },
-  [OrderStatusEnum.Cancelled]: { text: '已取消', color: 'error' },
-};
 
 export default function Order() {
   // 导航函数
@@ -178,14 +170,6 @@ export default function Order() {
     loadOptions();
   }, []);
 
-  // 当删除操作后，若当前页无数据且不是第一页，则跳转到上一页
-  useEffect(() => {
-    const totalPages: number = Math.ceil(total / pageSize);
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [total, pageSize, currentPage]);
-
   /**
      * 查看商品详情
      */
@@ -238,7 +222,13 @@ export default function Order() {
         try {
           const { code, msg } = await orderService.deleteOrder(record.id);
           if (code === 200) {
-            loadData();
+            const totalPages: number = Math.ceil((total - 1) / pageSize);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+              loadData({ currentPage: totalPages });
+            } else {
+              loadData();
+            }
             loadStatistics();
             message.success(`删除订单：${record.productName}(${record.orderNo}) 成功`);
           } else {
@@ -378,7 +368,7 @@ export default function Order() {
       key: 'status',
       width: 100,
       render: (status: OrderStatusType) => {
-        const config: IStatusConfig = STATUS_MAP[status];
+        const config: OrderStatusMapConfig = ORDER_STATUS_MAP[status];
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
@@ -451,7 +441,7 @@ export default function Order() {
           </div>
         </Card>
         <Card>
-          <div className="text-sm text-[#666]">待支付</div>
+          <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Pending].text}</div>
           <div className="text-2xl">
             <span
               className="text-warning cursor-pointer hover:opacity-75"
@@ -462,7 +452,7 @@ export default function Order() {
           </div>
         </Card>
         <Card>
-          <div className="text-sm text-[#666]">已支付</div>
+          <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Paid].text}</div>
           <div className="text-2xl">
             <span
               className="text-primary cursor-pointer hover:opacity-75"
@@ -473,7 +463,7 @@ export default function Order() {
           </div>
         </Card>
         <Card>
-          <div className="text-sm text-[#666]">已发货</div>
+          <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Shipped].text}</div>
           <div className="text-2xl">
             <span
               className="text-success cursor-pointer hover:opacity-75"
@@ -484,7 +474,7 @@ export default function Order() {
           </div>
         </Card>
         <Card>
-          <div className="text-sm text-[#666]">已取消</div>
+          <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Cancelled].text}</div>
           <div className="text-2xl">
             <span
               className="text-danger cursor-pointer hover:opacity-75"
@@ -495,7 +485,7 @@ export default function Order() {
           </div>
         </Card>
         <Card>
-          <div className="text-sm text-[#666]">已完成</div>
+          <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Completed].text}</div>
           <div className="text-2xl">
             <span
               className="text-gray-500 cursor-pointer hover:opacity-75"
@@ -532,8 +522,8 @@ export default function Order() {
         >
           <Option value="">全部状态</Option>
           {
-            Object.keys(STATUS_MAP).map((key: string) => (
-              <Option key={key} value={key}>{STATUS_MAP[key as OrderStatusType].text}</Option>
+            Object.keys(ORDER_STATUS_MAP).map((key: string) => (
+              <Option key={key} value={key}>{ORDER_STATUS_MAP[key as OrderStatusType].text}</Option>
             ))
           }
         </Select>
@@ -578,8 +568,8 @@ export default function Order() {
       >
         {currentRecord && (
           <Descriptions bordered column={2}>
-            <Descriptions.Item label="订单号" span={2}>{currentRecord.orderNo}</Descriptions.Item>
-            <Descriptions.Item label="商品名称" span={2}>{currentRecord.productName}</Descriptions.Item>
+            <Descriptions.Item label="订单号">{currentRecord.orderNo}</Descriptions.Item>
+            <Descriptions.Item label="商品名称">{currentRecord.productName}</Descriptions.Item>
             <Descriptions.Item label="客户姓名">{currentRecord.customerName}</Descriptions.Item>
             <Descriptions.Item label="联系电话">{currentRecord.phone}</Descriptions.Item>
             <Descriptions.Item label="订单金额">
@@ -588,8 +578,8 @@ export default function Order() {
               {currentRecord.amount.toLocaleString()}
             </Descriptions.Item>
             <Descriptions.Item label="订单状态">
-              <Tag color={STATUS_MAP[currentRecord.status].color}>
-                {STATUS_MAP[currentRecord.status].text}
+              <Tag color={ORDER_STATUS_MAP[currentRecord.status].color}>
+                {ORDER_STATUS_MAP[currentRecord.status].text}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="下单时间" span={2}>{currentRecord.createTime}</Descriptions.Item>
@@ -657,9 +647,9 @@ export default function Order() {
           >
             <Select placeholder="请选择状态">
               {
-                Object.values(OrderStatusEnum).map((status: OrderStatusEnum) => (
+                Object.values(OrderStatusEnum).map((status: string) => (
                   <Option key={status} value={status}>
-                    {STATUS_MAP[status].text}
+                    {ORDER_STATUS_MAP[status].text}
                   </Option>
                 ))
               }

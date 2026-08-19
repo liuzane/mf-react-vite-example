@@ -9,7 +9,7 @@ const [
   { DatabaseMapper: Mapper }, // 数据库映射器
   { default: UserService }, // 用户服务
 ] = await Promise.all([
-  import('host/consts'),
+  import('shared/consts'),
   import('mockDB/store-names'),
   import('mockDB/mapper'),
   import('mockDB/services/user-service'),

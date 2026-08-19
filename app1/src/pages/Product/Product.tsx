@@ -24,19 +24,18 @@ import {
 } from '@ant-design/icons';
 
 // 枚举
-import { ProductStatusEnum, ProductCategoryEnum } from '@/enums/product.enum';
+import { ProductCategoryEnum } from '@/enums/product.enum';
 
 // 类型
 import type { TableProps } from 'antd';
-import type { RootState, AppDispatch } from 'host/store';
+import type { RootState, AppDispatch } from 'shared/store';
 import type { ProductSearchParams, ProductUpdateDTO } from 'mockDB/services/product-service';
-import type { SharedTable } from 'host/components/SharedTable';
-import type { SharedPagination } from 'host/components/SharedPagination';
+import type { ProductStatusType, ProductStatusMapConfig } from 'shared/models';
+import type { SharedTable } from 'shared/components/SharedTable';
+import type { SharedPagination } from 'shared/components/SharedPagination';
 import type {
   IProduct,
-  ProductStatusType,
   ProductCategoryType,
-  IStatusConfig,
   IProductEditForm,
 } from '@/models/product';
 
@@ -44,22 +43,21 @@ import type {
 import productService from '@/services/productService';
 
 // 模块联邦远程模块
-const [{ queryProductStatistics }] = await Promise.all([
-  import('host/store/slices/dashboardSlice'),
+const [
+  { PRODUCT_STATUS_MAP }, // 商品状态映射
+  { ProductStatusEnum }, // 商品状态枚举
+  { queryProductStatistics }, // 商品统计查询函数
+] = await Promise.all([
+  import('shared/consts'),
+  import('shared/enums'),
+  import('shared/store/slices/dashboardSlice'),
 ]);
 
 // 模块联邦组件
-const SharedTable: SharedTable = lazy(() => import('host/components/SharedTable')) as SharedTable;
-const SharedPagination: SharedPagination = lazy(() => import('host/components/SharedPagination')) as SharedPagination;
+const SharedTable: SharedTable = lazy(() => import('shared/components/SharedTable')) as SharedTable;
+const SharedPagination: SharedPagination = lazy(() => import('shared/components/SharedPagination')) as SharedPagination;
 
 const { Option } = Select;
-
-const STATUS_MAP: Record<ProductStatusType, IStatusConfig> = {
-  [ProductStatusEnum.OnSale]: { text: '上架', color: 'success' },
-  [ProductStatusEnum.OffSale]: { text: '下架', color: 'default' },
-  [ProductStatusEnum.OutOfStock]: { text: '缺货', color: 'error' },
-  [ProductStatusEnum.LowStock]: { text: '库存紧张', color: 'warning' },
-};
 
 const CATEGORY_MAP: Record<ProductCategoryType, string> = {
   [ProductCategoryEnum.Electronics]: '电子商品',
@@ -150,14 +148,6 @@ export default function Product() {
     loadStatistics();
   }, []);
 
-  // 当删除操作后，若当前页无数据且不是第一页，则跳转到上一页
-  useEffect(() => {
-    const totalPages: number = Math.ceil(total / pageSize);
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [total, pageSize, currentPage]);
-
   /**
    * 查看商品详情
    */
@@ -212,7 +202,13 @@ export default function Product() {
         try {
           const { code, msg } = await productService.deleteProduct(record.id);
           if (code === 200) {
-            loadData();
+            const totalPages: number = Math.ceil((total - 1) / pageSize);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+              loadData({ currentPage: totalPages });
+            } else {
+              loadData();
+            }
             loadStatistics();
             message.success(`删除商品：${record.code} 成功`);
           } else {
@@ -361,7 +357,7 @@ export default function Product() {
       key: 'status',
       width: 100,
       render: (status: ProductStatusType) => {
-        const config: IStatusConfig = STATUS_MAP[status];
+        const config: ProductStatusMapConfig = PRODUCT_STATUS_MAP[status];
         return <Tag color={config.color}>{config.text}</Tag>;
       },
     },
@@ -378,6 +374,13 @@ export default function Product() {
       key: 'createTime',
       width: 180,
       sorter: (a: IProduct, b: IProduct) => new Date(a.createTime).getTime() - new Date(b.createTime).getTime(),
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+      width: 180,
+      sorter: (a: IProduct, b: IProduct) => new Date(a.updateTime).getTime() - new Date(b.updateTime).getTime(),
     },
     {
       title: '操作',
@@ -520,8 +523,8 @@ export default function Product() {
         >
           <Option value="">全部状态</Option>
           {
-            Object.keys(STATUS_MAP).map((key: string) => (
-              <Option key={key} value={key}>{STATUS_MAP[key as ProductStatusType].text}</Option>
+            Object.keys(PRODUCT_STATUS_MAP).map((key: string) => (
+              <Option key={key} value={key}>{PRODUCT_STATUS_MAP[key as ProductStatusType].text}</Option>
             ))
           }
         </Select>
@@ -569,12 +572,12 @@ export default function Product() {
       >
         {currentRecord && (
           <Descriptions bordered column={2}>
-            <Descriptions.Item label="商品编号" span={2}>{currentRecord.code}</Descriptions.Item>
-            <Descriptions.Item label="商品名称" span={2}>{currentRecord.name}</Descriptions.Item>
+            <Descriptions.Item label="商品编号">{currentRecord.code}</Descriptions.Item>
+            <Descriptions.Item label="商品名称">{currentRecord.name}</Descriptions.Item>
             <Descriptions.Item label="商品分类">{CATEGORY_MAP[currentRecord.category]}</Descriptions.Item>
             <Descriptions.Item label="商品状态">
-              <Tag color={STATUS_MAP[currentRecord.status].color}>
-                {STATUS_MAP[currentRecord.status].text}
+              <Tag color={PRODUCT_STATUS_MAP[currentRecord.status].color}>
+                {PRODUCT_STATUS_MAP[currentRecord.status].text}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="商品价格">
@@ -588,6 +591,7 @@ export default function Product() {
             <Descriptions.Item label="销量">{currentRecord.sales}</Descriptions.Item>
             <Descriptions.Item label="供应商">{currentRecord.supplier}</Descriptions.Item>
             <Descriptions.Item label="创建时间" span={2}>{currentRecord.createTime}</Descriptions.Item>
+            <Descriptions.Item label="更新时间" span={2}>{currentRecord.updateTime}</Descriptions.Item>
             <Descriptions.Item label="商品描述" span={2}>{currentRecord.description}</Descriptions.Item>
           </Descriptions>
         )}
@@ -670,9 +674,9 @@ export default function Product() {
           >
             <Select placeholder="请选择状态">
               {
-                Object.values(ProductStatusEnum).map((status: ProductStatusEnum) => (
+                Object.values(ProductStatusEnum).map((status: string) => (
                   <Option key={status} value={status}>
-                    {STATUS_MAP[status].text}
+                    {PRODUCT_STATUS_MAP[status].text}
                   </Option>
                 ))
               }

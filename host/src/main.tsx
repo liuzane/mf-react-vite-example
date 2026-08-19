@@ -8,22 +8,25 @@ import { Provider } from 'react-redux';
 import { ConfigProvider } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';
 import zhCN from 'antd/es/locale/zh_CN';
-import antdTheme from './utils/antdTheme';
 
 // 样式
 import './styles';
 
-// 数据库名称
-import { DATABASE_NAME } from './consts/mockDB';
-
-// Redux
-import store from './store';
-
 // 应用入口
 import App from './App.tsx';
 
-// 数据库模块
-const { initIndexedDB } = await import('mockDB/init');
+// 远程模块
+const [
+  { initIndexedDB }, // 数据库模块
+  { DATABASE_NAME }, // 数据库名称
+  { default: store }, // Redux 模块 store
+  { default: antdTheme }, // Ant Design 主题配置
+] = await Promise.all([
+  import('mockDB/init'),
+  import('shared/consts'),
+  import('shared/store'),
+  import('shared/utils/antdTheme'),
+]);
 
 async function init() {
   // 初始化 IndexedDB 数据库

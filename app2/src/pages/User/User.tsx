@@ -22,19 +22,15 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 
-// 枚举
-import { UserStatusEnum } from '@/enums/user.enum';
-
 // 类型
 import type { TableProps } from 'antd';
 import type { UserSearchParams, UserUpdateDTO } from 'mockDB/services/user-service';
 import type { Role } from 'mockDB/data/roles';
-import type { SharedTable } from 'host/components/SharedTable';
-import type { SharedPagination } from 'host/components/SharedPagination';
+import type { UserStatusType, UserStatusMapConfig } from 'shared/models';
+import type { SharedTable } from 'shared/components/SharedTable';
+import type { SharedPagination } from 'shared/components/SharedPagination';
 import type {
   IUser,
-  UserStatusType,
-  IStatusConfig,
   IUserEditForm,
 } from '@/models/user';
 
@@ -42,16 +38,20 @@ import type {
 import userService from '@/services/userService';
 import roleService from '@/services/roleService';
 
+// 模块联邦远程模块
+const [
+  { USER_STATUS_MAP }, // 角色状态映射
+  { UserStatusEnum }, // 角色状态枚举
+] = await Promise.all([
+  import('shared/consts'),
+  import('shared/enums'),
+]);
+
 // 模块联邦组件
-const SharedTable: SharedTable = lazy(() => import('host/components/SharedTable')) as SharedTable;
-const SharedPagination: SharedPagination = lazy(() => import('host/components/SharedPagination')) as SharedPagination;
+const SharedTable: SharedTable = lazy(() => import('shared/components/SharedTable')) as SharedTable;
+const SharedPagination: SharedPagination = lazy(() => import('shared/components/SharedPagination')) as SharedPagination;
 
 const { Option } = Select;
-
-const STATUS_MAP: Record<UserStatusType, IStatusConfig> = {
-  [UserStatusEnum.Active]: { text: '启用', color: 'success' },
-  [UserStatusEnum.Disabled]: { text: '禁用', color: 'default' },
-};
 
 export default function User() {
   // 路由参数
@@ -121,28 +121,14 @@ export default function User() {
   // 初始化及筛选条件变化时加载数据
   useEffect(() => {
     const name: string | null = searchParams.get('name');
-    const status: string | null = searchParams.get('status');
     if (name) {
       setSearchText(name);
-    }
-    if (status) {
-      setUserStatus(status as UserStatusType);
-    }
-    if (name || status) {
-      loadData({ searchText: name || '', status: status || '' });
+      loadData({ searchText: name });
     } else {
       loadData();
     }
     loadOptions();
   }, []);
-
-  // 当删除操作后，若当前页无数据且不是第一页，则跳转到上一页
-  useEffect(() => {
-    const totalPages: number = Math.ceil(total / pageSize);
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [total, pageSize, currentPage]);
 
   /**
    * 查看用户详情
@@ -193,7 +179,13 @@ export default function User() {
         try {
           const { code, msg } = await userService.deleteUser(record.id);
           if (code === 200) {
-            await loadData();
+            const totalPages: number = Math.ceil((total - 1) / pageSize);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+              loadData({ currentPage: totalPages });
+            } else {
+              loadData();
+            }
             message.success(`删除用户：${record.name} 成功`);
           } else {
             throw new Error(msg);
@@ -252,7 +244,7 @@ export default function User() {
       const { code, msg } = await userService.updateUser(updatedRecord);
       if (code === 200) {
         await loadData();
-        message.success(`用户 "${record.name}" 状态已更新为「${STATUS_MAP[newStatus].text}」`);
+        message.success(`用户 "${record.name}" 状态已更新为「${USER_STATUS_MAP[newStatus].text}」`);
       } else {
         throw new Error(msg);
       }
@@ -318,16 +310,19 @@ export default function User() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: UserStatusType, record: IUser) => (
-        <Space>
-          <Tag color={STATUS_MAP[status].color}>{STATUS_MAP[status].text}</Tag>
-          <Switch
-            size="small"
-            checked={status === UserStatusEnum.Active}
-            onChange={(checked: boolean) => onToggleStatus(checked, record)}
-          />
-        </Space>
-      ),
+      render: (status: UserStatusType, record: IUser) => {
+        const statusConfig: UserStatusMapConfig = USER_STATUS_MAP[status];
+        return (
+          <Space>
+            <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+            <Switch
+              size="small"
+              checked={status === UserStatusEnum.Active}
+              onChange={(checked: boolean) => onToggleStatus(checked, record)}
+            />
+          </Space>
+        );
+      },
     },
     {
       title: '角色',
@@ -339,7 +334,7 @@ export default function User() {
       title: '邮箱',
       dataIndex: 'email',
       key: 'email',
-      minWidth: 200,
+      minWidth: 300,
       ellipsis: true,
     },
     {
@@ -358,6 +353,13 @@ export default function User() {
       key: 'createTime',
       width: 180,
       sorter: (a: IUser, b: IUser) => new Date(a.createTime).getTime() - new Date(b.createTime).getTime(),
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+      width: 180,
+      sorter: (a: IUser, b: IUser) => new Date(a.updateTime).getTime() - new Date(b.updateTime).getTime(),
     },
     {
       title: '操作',
@@ -426,8 +428,8 @@ export default function User() {
         >
           <Option value="">全部状态</Option>
           {
-            Object.keys(STATUS_MAP).map((key: string) => (
-              <Option key={key} value={key}>{STATUS_MAP[key as UserStatusType].text}</Option>
+            Object.keys(USER_STATUS_MAP).map((key: string) => (
+              <Option key={key} value={key}>{USER_STATUS_MAP[key as UserStatusType].text}</Option>
             ))
           }
         </Select>
@@ -477,15 +479,16 @@ export default function User() {
           <Descriptions bordered column={2}>
             <Descriptions.Item label="用户ID">{currentRecord.id}</Descriptions.Item>
             <Descriptions.Item label="用户角色">{currentRecord.roleName}</Descriptions.Item>
-            <Descriptions.Item label="用户姓名" span={2}>{currentRecord.name}</Descriptions.Item>
+            <Descriptions.Item label="用户姓名">{currentRecord.name}</Descriptions.Item>
             <Descriptions.Item label="电子邮箱">{currentRecord.email}</Descriptions.Item>
             <Descriptions.Item label="手机号码">{currentRecord.phone}</Descriptions.Item>
             <Descriptions.Item label="用户状态">
-              <Tag color={STATUS_MAP[currentRecord.status].color}>
-                {STATUS_MAP[currentRecord.status].text}
+              <Tag color={USER_STATUS_MAP[currentRecord.status].color}>
+                {USER_STATUS_MAP[currentRecord.status].text}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="创建时间" span={2}>{currentRecord.createTime}</Descriptions.Item>
+            <Descriptions.Item label="更新时间" span={2}>{currentRecord.updateTime}</Descriptions.Item>
             <Descriptions.Item label="最后登录" span={2}>{currentRecord.lastLoginTime || '-'}</Descriptions.Item>
           </Descriptions>
         )}
@@ -542,9 +545,9 @@ export default function User() {
           >
             <Select placeholder="请选择状态">
               {
-                Object.values(UserStatusEnum).map((status: UserStatusEnum) => (
+                Object.values(UserStatusEnum).map((status: string) => (
                   <Option key={status} value={status}>
-                    {STATUS_MAP[status].text}
+                    {USER_STATUS_MAP[status].text}
                   </Option>
                 ))
               }

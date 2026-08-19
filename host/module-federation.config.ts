@@ -3,8 +3,6 @@ import { federation, createModuleFederationConfig } from '@module-federation/vit
 
 // 配置
 import { dependencies } from './package.json';
-import storeExposes from './src/store/mfExposes';
-import componentExposes from './src/components/mfExposes';
 
 export default (env: Record<string, string>) => federation(createModuleFederationConfig({
   name: 'host',
@@ -15,6 +13,13 @@ export default (env: Record<string, string>) => federation(createModuleFederatio
       name: 'mockDB',
       entry: `${env.VITE_MOCKDB_URL}/remoteEntry.js`,
       entryGlobalName: 'mockDB',
+      shareScope: 'default',
+    },
+    shared: {
+      type: 'module',
+      name: 'shared',
+      entry: `${env.VITE_SHARED_URL}/remoteEntry.js`,
+      entryGlobalName: 'shared',
       shareScope: 'default',
     },
     app1: {
@@ -31,12 +36,6 @@ export default (env: Record<string, string>) => federation(createModuleFederatio
       entryGlobalName: 'app2',
       shareScope: 'default',
     },
-  },
-  exposes: {
-    './consts': './src/consts',
-    './enums': './src/enums',
-    ...storeExposes,
-    ...componentExposes,
   },
   shared: {
     'react': {

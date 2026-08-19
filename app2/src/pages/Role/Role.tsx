@@ -1,6 +1,5 @@
 // 基础模块
 import { lazy, useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import {
   Input,
   Select,
@@ -22,20 +21,16 @@ import {
   EyeOutlined,
 } from '@ant-design/icons';
 
-// 枚举
-import { RoleStatusEnum } from '@/enums/role.enum';
-
 // 类型
 import type { TableProps } from 'antd';
 import type { Role } from 'mockDB/data/roles';
 import type { User } from 'mockDB/data/users';
 import type { RoleSearchParams, RoleUpdateDTO } from 'mockDB/services/role-service';
-import type { SharedTable } from 'host/components/SharedTable';
-import type { SharedPagination } from 'host/components/SharedPagination';
+import type { RoleStatusType, RoleStatusMapConfig } from 'shared/models';
+import type { SharedTable } from 'shared/components/SharedTable';
+import type { SharedPagination } from 'shared/components/SharedPagination';
 import type {
   IRole,
-  IStatusConfig,
-  RoleStatusType,
   IRoleEditForm,
 } from '@/models/role';
 
@@ -43,21 +38,22 @@ import type {
 import roleService from '@/services/roleService';
 import userService from '@/services/userService';
 
+// 模块联邦远程模块
+const [
+  { ROLE_STATUS_MAP }, // 角色状态映射
+  { RoleStatusEnum }, // 角色状态枚举
+] = await Promise.all([
+  import('shared/consts'),
+  import('shared/enums'),
+]);
+
 // 模块联邦组件
-const SharedTable: SharedTable = lazy(() => import('host/components/SharedTable')) as SharedTable;
-const SharedPagination: SharedPagination = lazy(() => import('host/components/SharedPagination')) as SharedPagination;
+const SharedTable: SharedTable = lazy(() => import('shared/components/SharedTable')) as SharedTable;
+const SharedPagination: SharedPagination = lazy(() => import('shared/components/SharedPagination')) as SharedPagination;
 
 const { Option } = Select;
 
-const STATUS_MAP: Record<RoleStatusType, IStatusConfig> = {
-  [RoleStatusEnum.Active]: { text: '启用', color: 'success' },
-  [RoleStatusEnum.Inactive]: { text: '停用', color: 'default' },
-};
-
 export default function Role() {
-  // 路由参数
-  const [searchParams] = useSearchParams();
-
   // 状态管理
   const [dataSource, setDataSource] = useState<IRole[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -128,24 +124,8 @@ export default function Role() {
 
   // 初始化及筛选条件变化时加载数据
   useEffect(() => {
-    const status: string | null = searchParams.get('status');
-    if (status) {
-      setRoleStatus(status as RoleStatusType);
-    }
-    if (status) {
-      loadData({ status });
-    } else {
-      loadData();
-    }
+    loadData();
   }, []);
-
-  // 当删除操作后，若当前页无数据且不是第一页，则跳转到上一页
-  useEffect(() => {
-    const totalPages: number = Math.ceil(total / pageSize);
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
-    }
-  }, [total, pageSize, currentPage]);
 
   /**
    * 查看角色详情
@@ -195,7 +175,13 @@ export default function Role() {
         try {
           const { code, msg } = await roleService.deleteRole(record.id);
           if (code === 200) {
-            await loadData();
+            const totalPages: number = Math.ceil((total - 1) / pageSize);
+            if (currentPage > totalPages && totalPages > 0) {
+              setCurrentPage(totalPages);
+              loadData({ currentPage: totalPages });
+            } else {
+              loadData();
+            }
             message.success(`删除角色：${record.name} 成功`);
           } else {
             throw new Error(msg);
@@ -318,16 +304,19 @@ export default function Role() {
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: RoleStatusType, record: IRole) => (
-        <Space>
-          <Tag color={STATUS_MAP[status].color}>{STATUS_MAP[status].text}</Tag>
-          <Switch
-            size="small"
-            checked={status === RoleStatusEnum.Active}
-            onChange={(checked: boolean) => onToggleStatus(checked, record)}
-          />
-        </Space>
-      ),
+      render: (status: RoleStatusType, record: IRole) => {
+        const statusConfig: RoleStatusMapConfig = ROLE_STATUS_MAP[status];
+        return (
+          <Space>
+            <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
+            <Switch
+              size="small"
+              checked={status === RoleStatusEnum.Active}
+              onChange={(checked: boolean) => onToggleStatus(checked, record)}
+            />
+          </Space>
+        );
+      },
     },
     {
       title: '用户数量',
@@ -424,8 +413,8 @@ export default function Role() {
         >
           <Option value="">全部状态</Option>
           {
-            Object.keys(STATUS_MAP).map((key: string) => (
-              <Option key={key} value={key}>{STATUS_MAP[key as RoleStatusType].text}</Option>
+            Object.keys(ROLE_STATUS_MAP).map((key: string) => (
+              <Option key={key} value={key}>{ROLE_STATUS_MAP[key as RoleStatusType].text}</Option>
             ))
           }
         </Select>
@@ -473,12 +462,11 @@ export default function Role() {
       >
         {currentRecord && (
           <Descriptions bordered column={2}>
-            <Descriptions.Item label="角色ID">{currentRecord.id}</Descriptions.Item>
             <Descriptions.Item label="角色编码">{currentRecord.code}</Descriptions.Item>
-            <Descriptions.Item label="角色名称" span={2}>{currentRecord.name}</Descriptions.Item>
+            <Descriptions.Item label="角色名称">{currentRecord.name}</Descriptions.Item>
             <Descriptions.Item label="角色状态">
-              <Tag color={STATUS_MAP[currentRecord.status].color}>
-                {STATUS_MAP[currentRecord.status].text}
+              <Tag color={ROLE_STATUS_MAP[currentRecord.status].color}>
+                {ROLE_STATUS_MAP[currentRecord.status].text}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="用户数量">
@@ -487,6 +475,7 @@ export default function Role() {
               人
             </Descriptions.Item>
             <Descriptions.Item label="创建时间" span={2}>{currentRecord.createTime}</Descriptions.Item>
+            <Descriptions.Item label="更新时间" span={2}>{currentRecord.updateTime}</Descriptions.Item>
             <Descriptions.Item label="角色描述" span={2}>{currentRecord.description}</Descriptions.Item>
           </Descriptions>
         )}
@@ -533,9 +522,9 @@ export default function Role() {
           >
             <Select placeholder="请选择状态">
               {
-                Object.values(RoleStatusEnum).map((status: RoleStatusEnum) => (
+                Object.values(RoleStatusEnum).map((status: string) => (
                   <Option key={status} value={status}>
-                    {STATUS_MAP[status].text}
+                    {ROLE_STATUS_MAP[status].text}
                   </Option>
                 ))
               }

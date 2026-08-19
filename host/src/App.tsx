@@ -7,13 +7,14 @@ import { Typography, Spin } from 'antd';
 import type { JSX } from 'react';
 import type { Location } from 'react-router-dom';
 
-// 枚举
-import { AppNameEnum } from '@/enums';
-
 // 布局组件
 import { AppLayout } from '@/layout';
 
+// 工具函数
 import { createRemoteLazy } from '@/utils/createRemoteLazy';
+
+// 枚举
+const { AppNameEnum } = await import('shared/enums');
 
 const { Title } = Typography;
 

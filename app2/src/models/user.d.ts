@@ -1,18 +1,9 @@
 // 类型
 import type { User } from 'mockDB/data/users';
-
-// 枚举
-import { UserStatusEnum } from '@/enums/user.enum';
+import type { UserStatusType } from 'shared/models';
 
 export interface IUser extends Omit<User, 'status'> {
   status: UserStatusType;
-}
-
-export type UserStatusType = typeof UserStatusEnum[keyof typeof UserStatusEnum];
-
-export interface IStatusConfig {
-  text: string;
-  color: 'success' | 'default' | 'error' | 'warning' | 'processing';
 }
 
 export interface IUserEditForm {

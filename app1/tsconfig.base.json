@@ -18,7 +18,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "mockDB/*": ["./@mf-types/mockDB/*"],
-      "host/*": ["./@mf-types/host/*"]
+      "shared/*": ["./@mf-types/shared/*"]
     }
   }
 }

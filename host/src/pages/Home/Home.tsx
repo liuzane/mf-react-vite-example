@@ -4,26 +4,36 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Card } from 'antd';
 
-// 枚举
-import {
-  AppNameEnum,
-  OrderStatusEnum,
-  ProductStatusEnum,
-  UserStatusEnum,
-  RoleStatusEnum,
-} from '@/enums';
-
 // 类型
 import type { NavigateFunction } from 'react-router-dom';
-import type { RootState, AppDispatch } from '@/store';
+import type { RootState, AppDispatch } from 'shared/store';
 
-// Store Slice
-import {
-  queryOrderStatistics,
-  queryProductStatistics,
-  queryUserStatistics,
-  queryRoleStatistics,
-} from '@/store/slices/dashboardSlice';
+// 模块联邦远程模块
+const [
+  {
+    ORDER_STATUS_MAP,
+    PRODUCT_STATUS_MAP,
+    USER_STATUS_MAP,
+    ROLE_STATUS_MAP,
+  },
+  {
+    AppNameEnum,
+    OrderStatusEnum,
+    ProductStatusEnum,
+    UserStatusEnum,
+    RoleStatusEnum,
+  },
+  {
+    queryOrderStatistics,
+    queryProductStatistics,
+    queryUserStatistics,
+    queryRoleStatistics,
+  },
+] = await Promise.all([
+  import('shared/consts'),
+  import('shared/enums'),
+  import('shared/store/slices/dashboardSlice'),
+]);
 
 export default function Home() {
   // 导航函数
@@ -62,7 +72,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">待支付</div>
+            <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Pending].text}</div>
             <div className="text-2xl">
               <span
                 className="text-warning cursor-pointer hover:opacity-75"
@@ -73,7 +83,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">已支付</div>
+            <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Paid].text}</div>
             <div className="text-2xl">
               <span
                 className="text-primary cursor-pointer hover:opacity-75"
@@ -84,7 +94,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">已发货</div>
+            <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Shipped].text}</div>
             <div className="text-2xl">
               <span
                 className="text-success cursor-pointer hover:opacity-75"
@@ -95,7 +105,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">已取消</div>
+            <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Cancelled].text}</div>
             <div className="text-2xl">
               <span
                 className="text-danger cursor-pointer hover:opacity-75"
@@ -106,7 +116,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">已完成</div>
+            <div className="text-sm text-[#666]">{ORDER_STATUS_MAP[OrderStatusEnum.Completed].text}</div>
             <div className="text-2xl">
               <span
                 className="text-gray-500 cursor-pointer hover:opacity-75"
@@ -136,7 +146,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">上架</div>
+            <div className="text-sm text-[#666]">{PRODUCT_STATUS_MAP[ProductStatusEnum.OnSale].text}</div>
             <div className="text-2xl">
               <span
                 className="text-success cursor-pointer hover:opacity-75"
@@ -147,7 +157,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">缺货</div>
+            <div className="text-sm text-[#666]">{PRODUCT_STATUS_MAP[ProductStatusEnum.OutOfStock].text}</div>
             <div className="text-2xl">
               <span
                 className="text-danger cursor-pointer hover:opacity-75"
@@ -158,7 +168,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">库存紧张</div>
+            <div className="text-sm text-[#666]">{PRODUCT_STATUS_MAP[ProductStatusEnum.LowStock].text}</div>
             <div className="text-2xl">
               <span
                 className="text-warning cursor-pointer hover:opacity-75"
@@ -169,7 +179,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">下架</div>
+            <div className="text-sm text-[#666]">{PRODUCT_STATUS_MAP[ProductStatusEnum.OffSale].text}</div>
             <div className="text-2xl">
               <span
                 className="text-gray-500 cursor-pointer hover:opacity-75"
@@ -199,7 +209,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">启用</div>
+            <div className="text-sm text-[#666]">{USER_STATUS_MAP[UserStatusEnum.Active].text}</div>
             <div className="text-2xl">
               <span
                 className="text-success cursor-pointer hover:opacity-75"
@@ -210,7 +220,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">禁用</div>
+            <div className="text-sm text-[#666]">{USER_STATUS_MAP[UserStatusEnum.Disabled].text}</div>
             <div className="text-2xl">
               <span
                 className="text-danger cursor-pointer hover:opacity-75"
@@ -240,7 +250,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">启用</div>
+            <div className="text-sm text-[#666]">{ROLE_STATUS_MAP[RoleStatusEnum.Active].text}</div>
             <div className="text-2xl">
               <span
                 className="text-success cursor-pointer hover:opacity-75"
@@ -251,7 +261,7 @@ export default function Home() {
             </div>
           </Card>
           <Card>
-            <div className="text-sm text-[#666]">禁用</div>
+            <div className="text-sm text-[#666]">{ROLE_STATUS_MAP[RoleStatusEnum.Inactive].text}</div>
             <div className="text-2xl">
               <span
                 className="text-danger cursor-pointer hover:opacity-75"

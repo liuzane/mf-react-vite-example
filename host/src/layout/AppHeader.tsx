@@ -3,19 +3,22 @@ import { useState } from 'react';
 import { Layout, Typography, Button, Modal, Card, Space, message } from 'antd';
 import { SettingOutlined, ReloadOutlined } from '@ant-design/icons';
 
-// 数据库名称
-import { DATABASE_NAME } from '@/consts';
-
 // 类型
 import type { DatabaseMapper } from 'mockDB/mapper';
 
-// 数据库表名
-const {
-  ORDER_STORE_NAME,
-  PRODUCT_STORE_NAME,
-  USER_STORE_NAME,
-  ROLE_STORE_NAME,
-} = await import('mockDB/store-names');
+// 模块联邦远程模块
+const [
+  {
+    ORDER_STORE_NAME,
+    PRODUCT_STORE_NAME,
+    USER_STORE_NAME,
+    ROLE_STORE_NAME,
+  }, // 数据库表名
+  { DATABASE_NAME }, // 数据库名称
+] = await Promise.all([
+  import('mockDB/store-names'),
+  import('shared/consts'),
+]);
 
 const { Header } = Layout;
 const { Title, Paragraph } = Typography;

@@ -16,11 +16,11 @@ export default (env: Record<string, string>) => federation(createModuleFederatio
       entryGlobalName: 'mockDB',
       shareScope: 'default',
     },
-    host: {
+    shared: {
       type: 'module',
-      name: 'host',
-      entry: `${env.VITE_HOST_URL}/remoteEntry.js`,
-      entryGlobalName: 'host',
+      name: 'shared',
+      entry: `${env.VITE_SHARED_URL}/remoteEntry.js`,
+      entryGlobalName: 'shared',
       shareScope: 'default',
     },
   },

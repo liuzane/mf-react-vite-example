@@ -9,7 +9,7 @@ import type { NavigateFunction, Location } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 
 // 枚举
-import { AppNameEnum } from '@/enums';
+const { AppNameEnum } = await import('shared/enums');
 
 type MenuItem = Required<MenuProps>['items'][number];
 
